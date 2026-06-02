@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Relay taxonomy linkage: this is the thread that later connects to dashboards + grading -->
+<meta name="relay-skill-id" content="2666e8eb-70f3-4f37-839e-51c9c21fb68d">
+<meta name="relay-skill-name" content="Comprehensible Input: Vocabulary Instruction">
+<title>Strong, Attempting, or Non-Example? — Vocabulary Instruction</title>
+<style>
+  :root {
+    --ink: #1b1b1f; --muted: #5c5c66; --line: #e3e3ea; --bg: #f7f7fb;
+    --accent: #3a48c4; --accent-ink: #fff;
+    --strong: #137a4b; --strong-bg: #e6f5ec;
+    --attempting: #9a6a00; --attempting-bg: #fbf1dc;
+    --non: #b22633; --non-bg: #fbe8ea;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
+    background: var(--bg); margin: 0; line-height: 1.55; }
+  .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+  .eyebrow { font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-size: 1.4rem; margin: .25rem 0 .5rem; }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 600; padding: .15rem .5rem;
+    border-radius: 999px; background: #ececf6; color: var(--accent); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 1.25rem 1.25rem 1.4rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .progress { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; }
+  .lookfor { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--accent); font-weight: 700; margin: 0; }
+  .explanation { font-size: .9rem; color: var(--muted); margin: .15rem 0 1rem; }
+  .snippet { background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 8px; padding: .9rem 1rem; white-space: pre-wrap; font-size: 1.02rem; margin-bottom: 1.25rem; }
+  .q { font-weight: 600; margin-bottom: .75rem; }
+  .choices { display: grid; gap: .6rem; }
+  button.choice { text-align: left; font: inherit; padding: .7rem .9rem; border-radius: 10px;
+    border: 1.5px solid var(--line); background: #fff; cursor: pointer; transition: border-color .12s, background .12s; }
+  button.choice:hover:not(:disabled) { border-color: var(--accent); }
+  button.choice:focus-visible { outline: 3px solid #b9c0f0; outline-offset: 1px; }
+  button.choice:disabled { cursor: default; }
+  .choice.picked-strong, .choice.is-strong { background: var(--strong-bg); border-color: var(--strong); color: var(--strong); }
+  .choice.picked-attempting, .choice.is-attempting { background: var(--attempting-bg); border-color: var(--attempting); color: var(--attempting); }
+  .choice.picked-non, .choice.is-non { background: var(--non-bg); border-color: var(--non); color: var(--non); }
+  .choice.dim { opacity: .5; }
+  .feedback { margin-top: 1.1rem; padding: .85rem 1rem; border-radius: 10px; font-size: .95rem; }
+  .feedback.ok { background: var(--strong-bg); color: var(--strong); }
+  .feedback.no { background: var(--non-bg); color: var(--non); }
+  .feedback .verdict { font-weight: 700; }
+  .actions { margin-top: 1.25rem; display: flex; justify-content: flex-end; }
+  .btn { font: inherit; font-weight: 600; padding: .6rem 1.1rem; border-radius: 10px; border: 0;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  .btn:focus-visible { outline: 3px solid #b9c0f0; outline-offset: 2px; }
+  .hidden { display: none; }
+  .result h2 { margin-top: 0; }
+  .score { font-size: 2.4rem; font-weight: 800; color: var(--accent); }
+  footer { margin-top: 2rem; font-size: .8rem; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Relay Teacher Skills · <span class="badge">Sequence skill</span></p>
+    <h1>Comprehensible Input: Vocabulary Instruction</h1>
+    <p class="explanation" style="margin:0">Practice spotting the difference between <strong>strong</strong>,
+      <strong>attempting</strong>, and <strong>non-example</strong> enactments of each look-for — the same
+      distinctions you'll coach your candidates on.</p>
+  </header>
+
+  <main id="quiz" class="card" aria-live="polite">
+    <p class="progress" id="progress"></p>
+    <p class="lookfor" id="lookfor"></p>
+    <p class="explanation" id="explanation"></p>
+    <div class="snippet" id="snippet"></div>
+    <p class="q" id="question">How would you rate this enactment?</p>
+    <div class="choices" id="choices"></div>
+    <div class="feedback hidden" id="feedback"></div>
+    <div class="actions"><button class="btn hidden" id="next">Next</button></div>
+  </main>
+
+  <section id="result" class="card result hidden" aria-live="polite">
+    <h2>Nice work!</h2>
+    <p>You classified <span class="score" id="finalScore"></span> correctly.</p>
+    <p class="explanation" id="resultNote"></p>
+    <div class="actions"><button class="btn" id="restart">Try again</button></div>
+  </section>
+
+  <footer>Grounded in the Relay teacher-skills taxonomy · Vocabulary Instruction</footer>
+</div>
+
+<script id="items" type="application/json">
+[
+  {"lookFor":"Name Vocabulary Word","explanation":"Explicitly state the target vocabulary word as a focus item.",
+   "snippet":"\"Our vocabulary word today is evaporate. The word is evaporate.\"",
+   "answer":"strong","feedback":"The word is explicitly named as the focus of instruction."},
+  {"lookFor":"Name Vocabulary Word","explanation":"Explicitly state the target vocabulary word as a focus item.",
+   "snippet":"\"Evaporate means...\"",
+   "answer":"attempting","feedback":"Implies focus on the word, but doesn't name it as the focus."},
+  {"lookFor":"Name Vocabulary Word","explanation":"Explicitly state the target vocabulary word as a focus item.",
+   "snippet":"\"Today we'll learn how water evaporates from the ocean.\"",
+   "answer":"non","feedback":"The word is embedded in content, not named as a focus item."},
+
+  {"lookFor":"Choral Word Repetition","explanation":"Cue students to say a target word aloud together.",
+   "snippet":"<Teacher> \"Our word is evaporate. My turn. Evaporate. Your turn. Go.\"\n<Students in unison> \"Evaporate.\"",
+   "answer":"strong","feedback":"Clear in-cue, and the student response is in unison."},
+  {"lookFor":"Choral Word Repetition","explanation":"Cue students to say a target word aloud together.",
+   "snippet":"<Teacher> \"The word is evaporate. Everyone say evaporate.\"\n<Some students respond at different times>",
+   "answer":"attempting","feedback":"No in-cue, and the response isn't in unison."},
+  {"lookFor":"Choral Word Repetition","explanation":"Cue students to say a target word aloud together.",
+   "snippet":"<Teacher> \"The word is evaporate. Let me tell you what it means.\"",
+   "answer":"non","feedback":"No student repetition is invited."},
+
+  {"lookFor":"Explain Unfamiliar Terms","explanation":"Explain unfamiliar terms to support content understanding and vocabulary development.",
+   "snippet":"\"Volcanoes are commonly found at divergent plate boundaries where earth's plates move away from each other.\"",
+   "answer":"strong","feedback":"The unfamiliar term is clearly explained in plain language."},
+  {"lookFor":"Explain Unfamiliar Terms","explanation":"Explain unfamiliar terms to support content understanding and vocabulary development.",
+   "snippet":"\"Volcanoes are commonly found at divergent, meaning moving apart, plate boundaries.\"",
+   "answer":"attempting","feedback":"An explanation is offered, but it's somewhat unclear."},
+  {"lookFor":"Explain Unfamiliar Terms","explanation":"Explain unfamiliar terms to support content understanding and vocabulary development.",
+   "snippet":"\"Volcanoes are commonly found at divergent plate boundaries.\"",
+   "answer":"non","feedback":"The unfamiliar term is left unexplained."}
+]
+</script>
+
+<script>
+(function () {
+  const LABELS = { strong: "Strong example", attempting: "Attempting", non: "Non-example" };
+  const ORDER = ["strong", "attempting", "non"];
+  const all = JSON.parse(document.getElementById("items").textContent);
+
+  // Shuffle so items aren't grouped by look-for.
+  const items = all.slice();
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+
+  let idx = 0, score = 0, answered = false;
+  const $ = (id) => document.getElementById(id);
+
+  function render() {
+    answered = false;
+    const it = items[idx];
+    $("progress").textContent = `Item ${idx + 1} of ${items.length}`;
+    $("lookfor").textContent = it.lookFor;
+    $("explanation").textContent = it.explanation;
+    $("snippet").textContent = it.snippet;
+    $("feedback").className = "feedback hidden";
+    $("next").className = "btn hidden";
+
+    const choices = $("choices");
+    choices.innerHTML = "";
+    ORDER.forEach((key) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.textContent = LABELS[key];
+      b.dataset.key = key;
+      b.addEventListener("click", () => pick(key));
+      choices.appendChild(b);
+    });
+    $("choices").querySelector("button").focus();
+  }
+
+  function pick(key) {
+    if (answered) return;
+    answered = true;
+    const it = items[idx];
+    const correct = key === it.answer;
+    if (correct) score++;
+
+    document.querySelectorAll(".choice").forEach((b) => {
+      const k = b.dataset.key;
+      b.disabled = true;
+      if (k === it.answer) b.classList.add("is-" + it.answer);
+      else if (k === key) { b.classList.add("picked-" + k); }
+      else b.classList.add("dim");
+    });
+
+    const fb = $("feedback");
+    fb.className = "feedback " + (correct ? "ok" : "no");
+    const verdict = correct ? "Correct." : `Not quite — this is "${LABELS[it.answer]}."`;
+    fb.innerHTML = `<span class="verdict">${verdict}</span> ${it.feedback}`;
+
+    const next = $("next");
+    next.textContent = idx === items.length - 1 ? "See results" : "Next";
+    next.className = "btn";
+    next.focus();
+  }
+
+  function next() {
+    idx++;
+    if (idx >= items.length) return finish();
+    render();
+  }
+
+  function finish() {
+    $("quiz").classList.add("hidden");
+    const res = $("result");
+    res.classList.remove("hidden");
+    $("finalScore").textContent = `${score} / ${items.length}`;
+    $("resultNote").textContent = score === items.length
+      ? "Perfect — you nailed every distinction."
+      : "Review the feedback on any you missed, then try again.";
+
+    // Forward-looking: in later phases this is where the Activity SDK reports a score
+    // to the parent frame (for the professor dashboard / Canvas gradebook).
+    try {
+      window.parent.postMessage({
+        type: "relay-activity-complete",
+        skillId: "2666e8eb-70f3-4f37-839e-51c9c21fb68d",
+        score: score, max: items.length
+      }, "*");
+    } catch (e) {}
+  }
+
+  $("next").addEventListener("click", next);
+  $("restart").addEventListener("click", () => { idx = 0; score = 0;
+    $("result").classList.add("hidden"); $("quiz").classList.remove("hidden"); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
