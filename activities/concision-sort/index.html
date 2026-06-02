@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Relay taxonomy linkage -->
+<meta name="relay-lookfor-id" content="e59be5a6-9b3e-415c-9074-70369b224bac">
+<meta name="relay-lookfor-name" content="Concision">
+<title>Sort for Concision</title>
+<style>
+  :root {
+    --ink:#1b1b1f; --muted:#5c5c66; --line:#e3e3ea; --bg:#f7f7fb; --accent:#3a48c4;
+    --strong:#137a4b; --strong-bg:#e6f5ec;
+    --attempting:#9a6a00; --attempting-bg:#fbf1dc;
+    --non:#b22633; --non-bg:#fbe8ea;
+    --good:#16a34a; --bad:#dc2626;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink);
+    background:var(--bg); margin:0; line-height:1.5; }
+  .wrap { max-width:50rem; margin:0 auto; padding:1.5rem 1.25rem 4rem; }
+  header { border-bottom:1px solid var(--line); padding-bottom:.9rem; margin-bottom:1.25rem; }
+  .eyebrow { font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0; }
+  h1 { font-size:1.4rem; margin:.25rem 0 .4rem; }
+  .lede { color:var(--muted); margin:0; font-size:.95rem; }
+  .progress { font-size:.85rem; color:var(--muted); margin:.25rem 0 .6rem; }
+  .instructions { background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:10px; padding:.7rem .9rem; margin:0 0 1.1rem; font-size:.92rem; }
+  .instructions .alt { color:var(--muted); }
+
+  .stage { min-height:9.5rem; display:flex; align-items:center; justify-content:center; margin-bottom:1.25rem; }
+  .card { background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:12px; padding:1rem 1.1rem; box-shadow:0 2px 6px rgba(0,0,0,.07);
+    cursor:grab; max-width:42rem; font-size:1rem; }
+  .card:active { cursor:grabbing; }
+  .card:focus-visible { outline:3px solid #b9c0f0; outline-offset:2px; }
+  .card.dragging { opacity:.4; }
+  .card.shake { animation:shake .4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+  .card.fly { transition:transform .25s ease, opacity .25s ease; opacity:0; transform:scale(.85); }
+
+  .buckets { display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; }
+  .bucket { font:inherit; cursor:pointer; border-radius:14px; padding:1.4rem .75rem; min-height:7rem;
+    border:2px dashed var(--line); background:#fff; text-align:center; transition:transform .08s, border-color .12s, background .12s; }
+  .bucket:focus-visible { outline:3px solid #b9c0f0; outline-offset:2px; }
+  .bucket .bname { display:block; font-weight:700; font-size:1.05rem; }
+  .bucket .bhint { display:block; font-size:.78rem; color:var(--muted); margin-top:.25rem; }
+  .bucket[data-bucket=strong] .bname { color:var(--strong); }
+  .bucket[data-bucket=attempting] .bname { color:var(--attempting); }
+  .bucket[data-bucket=non] .bname { color:var(--non); }
+  .bucket.hover { border-style:solid; border-color:var(--accent); transform:translateY(-2px); background:#fafaff; }
+  .bucket.flash-good { border-color:var(--good); background:var(--strong-bg); animation:pop .3s; }
+  .bucket.flash-bad { border-color:var(--bad); background:var(--non-bg); animation:pop .3s; }
+  @keyframes pop { 50%{transform:scale(1.04)} }
+
+  .feedback { margin-top:1.1rem; padding:.85rem 1rem; border-radius:10px; background:var(--strong-bg);
+    color:var(--strong); font-size:.95rem; }
+  .feedback .verdict { font-weight:700; }
+  .actions { margin-top:1.1rem; display:flex; justify-content:flex-end; }
+  .btn { font:inherit; font-weight:600; padding:.6rem 1.1rem; border-radius:10px; border:0;
+    background:var(--accent); color:#fff; cursor:pointer; }
+  .btn:focus-visible { outline:3px solid #b9c0f0; outline-offset:2px; }
+  .hidden { display:none; }
+  .result { background:#fff; border:1px solid var(--line); border-radius:14px; padding:1.5rem; }
+  .result h2 { margin-top:0; }
+  .score { font-size:2.4rem; font-weight:800; color:var(--accent); }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+  footer { margin-top:2rem; font-size:.8rem; color:var(--muted); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Relay Teacher Skills · Look-For</p>
+    <h1>Sort for Concision</h1>
+    <p class="lede">Concision: use only the words and steps students need — no extraneous detail or over-explanation.</p>
+  </header>
+
+  <main id="game">
+    <p class="progress" id="progress"></p>
+    <p class="instructions">👉 <strong>Drag the statement</strong> into the bucket that best matches its concision — <strong>Strong</strong>, <strong>Attempting</strong>, or <strong>Non-example</strong>. Correct drops chime and turn green; a wrong drop buzzes and sends the card back to try again. <span class="alt">(On a touch screen or keyboard, just tap a bucket.)</span></p>
+
+    <div class="stage" id="stage">
+      <div class="card" id="card" draggable="true" tabindex="0" role="article"></div>
+    </div>
+
+    <div class="buckets" id="buckets">
+      <button class="bucket" data-bucket="strong" type="button">
+        <span class="bname">Strong</span><span class="bhint">Only what's needed</span></button>
+      <button class="bucket" data-bucket="attempting" type="button">
+        <span class="bname">Attempting</span><span class="bhint">Some extra words</span></button>
+      <button class="bucket" data-bucket="non" type="button">
+        <span class="bname">Non-example</span><span class="bhint">Wordy / tangential</span></button>
+    </div>
+
+    <div class="feedback hidden" id="feedback"></div>
+    <div class="actions"><button class="btn hidden" id="next" type="button">Next card</button></div>
+  </main>
+
+  <section id="result" class="result hidden" aria-live="polite">
+    <h2>Done!</h2>
+    <p>You sorted <span class="score" id="finalScore"></span> correctly on the first try.</p>
+    <p class="lede" id="resultNote"></p>
+    <div class="actions"><button class="btn" id="restart" type="button">Try again</button></div>
+  </section>
+
+  <footer>Grounded in the Relay teacher-skills taxonomy · Concision</footer>
+</div>
+
+<script id="items" type="application/json">
+[
+  {"answer":"strong",
+   "text":"\"Step 2 of our lab procedure is to put away all materials except something to write with so you have space to work safely with lab materials.\"",
+   "why":"Only the necessary words and steps — nothing extraneous."},
+  {"answer":"strong",
+   "text":"\"A habitat is where an organism, like a plant or an animal, lives. A habitat includes what the organism needs to survive, like food, water, and shelter. For example, a frog's habitat is a pond. The pond habitat includes living things like the insects the frog eats and other animals and plants. The pond habitat also includes non-living things like the water the frog needs for life.\"",
+   "why":"Complete but tight — every sentence carries needed information."},
+  {"answer":"attempting",
+   "text":"\"Ok, so it's time to get ready for step 2 of our lab procedure. Our labs always involve materials so we need to have space to work with them safely. So, step 2 is to put away all materials except something to write with so you have space to work safely with lab materials. Be sure to put away books and any other materials you have out.\"",
+   "why":"The core instruction is there, but with unnecessary words and repetition."},
+  {"answer":"attempting",
+   "text":"\"So, a habitat is the place where an organism lives. An organism can be a plant or it can be an animal. A habitat includes the different things that the organism needs in order to survive - things like food that it eats, water that it drinks, and shelter where it can be safe. So for example, if we think about a frog, a frog's habitat would be a pond. In the pond habitat there are living things, like the insects that the frog eats for its food, and there are also other animals that live there and plants that grow there. And the pond habitat also has non-living things too, like the water that the frog needs to live and also rocks and mud that are in the pond.\"",
+   "why":"Accurate, but padded with unnecessary words and phrases throughout."},
+  {"answer":"non",
+   "text":"\"Ok, so it's time to get ready for step 2 of our lab procedure. Our labs always involve materials. That might be graduated cylinders, balances, specimens to observe, or substances to measure - you name it. Working with materials is always fun! To be able to have space to work with materials, step 2 is to be sure to clear off the area in front of you on your table. There should be nothing there. Put away your books from silent reading time. If the last activity involved any materials, be sure to put those away. If you have anything else out, find a place for it so we have enough space for our lab materials.\"",
+   "why":"Buried in excessive detail and tangential comments."},
+  {"answer":"non",
+   "text":"\"Habitat - so this is a really important word. A habitat is basically where something, an organism, lives, like where an animal or a plant lives. It's kind of like their home, but the word is habitat not home. So a habitat includes things around them, that is the organism, the plant or animal, that they need. Like, for example, if you think about a frog, right, a frog lives in a pond, so the pond is the frog's habitat. It includes the things the frog needs. And in the pond there are living things - like there are insects that the frog eats, and there are other animals, and there are plants and stuff like that. And then there are also non-living things in the habitat too, like the water - frogs need water to live - and the mud and rocks and things like that in the pond. So the habitat is all of this stuff together, water, mud, rocks, insects, plants, other animals.\"",
+   "why":"Excessive filler words and redundant explanations."}
+]
+</script>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const all = JSON.parse($("items").textContent);
+
+  // shuffle
+  const items = all.slice();
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+
+  let idx = 0, firstTryCorrect = 0, missedThisCard = false, locked = false;
+
+  // ---- sound (Web Audio, self-contained, no assets) ----
+  let actx = null;
+  function ac() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume(); return actx; }
+  function tone(freq, start, dur, type, gain) {
+    const c = ac(), o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t = c.currentTime + start;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function ding() { tone(880, 0, 0.18, "sine", 0.25); tone(1320, 0.08, 0.22, "sine", 0.22); }
+  function buzz() { tone(150, 0, 0.32, "square", 0.18); tone(110, 0, 0.32, "sawtooth", 0.12); }
+
+  function render() {
+    locked = false; missedThisCard = false;
+    const it = items[idx];
+    $("progress").textContent = `Card ${idx + 1} of ${items.length}`;
+    const card = $("card");
+    card.textContent = it.text;
+    card.className = "card";
+    card.style.display = "";
+    $("feedback").className = "feedback hidden";
+    $("next").className = "btn hidden";
+    card.focus();
+  }
+
+  function place(bucket) {
+    if (locked) return;
+    const it = items[idx];
+    const bEl = document.querySelector('.bucket[data-bucket="' + bucket + '"]');
+    const correct = bucket === it.answer;
+
+    if (correct) {
+      locked = true;
+      ding();
+      bEl.classList.add("flash-good");
+      if (!missedThisCard) firstTryCorrect++;
+      const card = $("card");
+      card.classList.add("fly");
+      setTimeout(() => bEl.classList.remove("flash-good"), 350);
+      setTimeout(() => {
+        card.style.display = "none";
+        const fb = $("feedback");
+        fb.className = "feedback";
+        fb.innerHTML = '<span class="verdict">' +
+          (missedThisCard ? "Right — this is a " : "Correct — a ") +
+          ({strong:"strong example.",attempting:"\"attempting\" example.",non:"non-example."}[it.answer]) +
+          '</span> ' + it.why;
+        const next = $("next");
+        next.textContent = idx === items.length - 1 ? "See results" : "Next card";
+        next.className = "btn"; next.focus();
+      }, 260);
+    } else {
+      buzz();
+      missedThisCard = true;
+      bEl.classList.add("flash-bad");
+      const card = $("card");
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      setTimeout(() => bEl.classList.remove("flash-bad"), 350);
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= items.length) return finish();
+    render();
+  }
+
+  function finish() {
+    $("game").classList.add("hidden");
+    const res = $("result"); res.classList.remove("hidden");
+    $("finalScore").textContent = firstTryCorrect + " / " + items.length;
+    $("resultNote").textContent = firstTryCorrect === items.length
+      ? "Perfect first-try sorting — you've got an eye for concision."
+      : "Notice how the wordier versions bury the same point. Try again to sharpen it.";
+    try {
+      window.parent.postMessage({ type:"relay-activity-complete",
+        lookForId:"e59be5a6-9b3e-415c-9074-70369b224bac",
+        score:firstTryCorrect, max:items.length }, "*");
+    } catch (e) {}
+  }
+
+  // ---- drag + drop ----
+  const card = $("card");
+  card.addEventListener("dragstart", (e) => {
+    if (locked) { e.preventDefault(); return; }
+    e.dataTransfer.setData("text/plain", "card");
+    e.dataTransfer.effectAllowed = "move";
+    card.classList.add("dragging");
+  });
+  card.addEventListener("dragend", () => card.classList.remove("dragging"));
+
+  document.querySelectorAll(".bucket").forEach((b) => {
+    b.addEventListener("dragover", (e) => { e.preventDefault(); b.classList.add("hover"); });
+    b.addEventListener("dragleave", () => b.classList.remove("hover"));
+    b.addEventListener("drop", (e) => { e.preventDefault(); b.classList.remove("hover"); place(b.dataset.bucket); });
+    // click / keyboard fallback (also covers touch devices)
+    b.addEventListener("click", () => place(b.dataset.bucket));
+  });
+
+  $("next").addEventListener("click", next);
+  $("restart").addEventListener("click", () => {
+    idx = 0; firstTryCorrect = 0;
+    $("result").classList.add("hidden"); $("game").classList.remove("hidden"); render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
