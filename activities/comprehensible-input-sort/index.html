@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Relay taxonomy linkage -->
+<meta name="relay-skill-id" content="f8444e38-636a-4e95-a1e9-61d081535b19">
+<meta name="relay-skill-name" content="Comprehensible Input">
+<title>Sort the Comprehensible Input</title>
+<style>
+  :root {
+    --ink:#1b1b1f; --muted:#5c5c66; --line:#e3e3ea; --bg:#e4f1ea; --bg-stripe:#d2e8dc; --accent:#1f7a5a;
+    --strong:#137a4b; --strong-bg:#e6f5ec;
+    --attempting:#9a6a00; --attempting-bg:#fbf1dc;
+    --non:#b22633; --non-bg:#fbe8ea;
+    --good:#16a34a; --bad:#dc2626;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink);
+    background:var(--bg);
+    margin:0; line-height:1.5; }
+  .wrap { max-width:50rem; margin:0 auto; padding:1.5rem 1.25rem 4rem; }
+  header { border-bottom:1px solid var(--line); padding-bottom:.9rem; margin-bottom:1.25rem; }
+  .eyebrow { font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0; }
+  h1 { font-size:1.4rem; margin:.25rem 0 .4rem; }
+  .lede { color:var(--muted); margin:0; font-size:.95rem; }
+  .progress { font-size:.85rem; color:var(--muted); margin:.25rem 0 .6rem; }
+  .instructions { background:var(--bg-stripe); border:1px solid #bcdccb;
+    border-radius:10px; padding:.7rem .9rem; margin:0 0 1.1rem; font-size:.9rem; color:var(--muted); }
+  .instructions .alt { color:var(--muted); }
+  .instructions .cue { font-style:italic; color:var(--muted); }
+
+  .stage { min-height:9.5rem; display:flex; align-items:center; justify-content:center; margin-bottom:1.25rem; }
+  .card { background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:12px; padding:1rem 1.1rem; box-shadow:0 2px 6px rgba(0,0,0,.07);
+    cursor:grab; max-width:42rem; font-size:1rem; }
+  .card:active { cursor:grabbing; }
+  .card:focus-visible { outline:3px solid #9ccdb9; outline-offset:2px; }
+  .card.dragging { opacity:.4; }
+  .card.shake { animation:shake .4s; }
+  .card .cue { font-style:italic; color:var(--muted); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+  .card.fly { transition:transform .25s ease, opacity .25s ease; opacity:0; transform:scale(.85); }
+
+  .buckets { display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; }
+  .bucket { font:inherit; cursor:pointer; border-radius:14px; padding:1.4rem .75rem; min-height:7rem;
+    border:2px dashed var(--line); background:#fff; text-align:center; transition:transform .08s, border-color .12s, background .12s; }
+  .bucket:focus-visible { outline:3px solid #9ccdb9; outline-offset:2px; }
+  .bucket .bname { display:block; font-weight:700; font-size:1.05rem; }
+  .bucket .bhint { display:block; font-size:.78rem; color:var(--muted); margin-top:.25rem; }
+  .bucket[data-bucket=strong] .bname { color:var(--strong); }
+  .bucket[data-bucket=approaching] .bname { color:var(--attempting); }
+  .bucket[data-bucket=non] .bname { color:var(--non); }
+  .bucket.hover { border-style:solid; border-color:var(--accent); transform:translateY(-2px); background:#f5fbf8; }
+  .bucket.flash-good { border-color:var(--good); background:var(--strong-bg); animation:pop .3s; }
+  .bucket.flash-bad { border-color:var(--bad); background:var(--non-bg); animation:pop .3s; }
+  @keyframes pop { 50%{transform:scale(1.04)} }
+
+  .feedback { margin-top:1.1rem; padding:.85rem 1rem; border-radius:10px; background:var(--strong-bg);
+    color:var(--strong); font-size:.95rem; }
+  .feedback .verdict { font-weight:700; }
+  .feedback .lookfor { display:inline-block; font-size:.78rem; font-weight:700; letter-spacing:.02em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:.2rem; }
+  .actions { margin-top:1.1rem; display:flex; justify-content:flex-end; }
+  .btn { font:inherit; font-weight:600; padding:.6rem 1.1rem; border-radius:10px; border:0;
+    background:var(--accent); color:#fff; cursor:pointer; }
+  .btn:focus-visible { outline:3px solid #9ccdb9; outline-offset:2px; }
+  .hidden { display:none; }
+  .result { background:#fff; border:1px solid var(--line); border-radius:14px; padding:1.5rem; }
+  .result h2 { margin-top:0; }
+  .score { font-size:2.4rem; font-weight:800; color:var(--accent); }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+  footer { margin-top:2rem; font-size:.8rem; color:var(--muted); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Relay Teacher Skills · Always Skill</p>
+    <h1>Sort the Comprehensible Input</h1>
+    <p class="lede">Comprehensible Input: deliver instruction so multilingual learners can follow along and access grade-level content.</p>
+  </header>
+
+  <main id="game">
+    <p class="progress" id="progress"></p>
+    <p class="instructions">👉 Each card is something an <strong>8th-grade science teacher</strong> might say or do. <span class="cue">[Stage directions in brackets]</span> describe gestures, visuals, or pacing. <strong>Drag the card</strong> into the bucket that best fits how strongly it supports comprehensible input — <strong>Strong</strong>, <strong>Approaching</strong>, or <strong>Non-example</strong>. A correct drop chimes and turns green; a wrong drop buzzes and the card comes back to try again. <span class="alt">(On a touch screen or with a keyboard, just tap a bucket.)</span></p>
+
+    <div class="stage" id="stage">
+      <div class="card" id="card" draggable="true" tabindex="0" role="article"></div>
+    </div>
+
+    <div class="buckets" id="buckets">
+      <button class="bucket" data-bucket="strong" type="button">
+        <span class="bname">Strong</span><span class="bhint">Clear, supported access</span></button>
+      <button class="bucket" data-bucket="approaching" type="button">
+        <span class="bname">Approaching</span><span class="bhint">On the way, not all the way</span></button>
+      <button class="bucket" data-bucket="non" type="button">
+        <span class="bname">Non-example</span><span class="bhint">Creates a barrier</span></button>
+    </div>
+
+    <div class="feedback hidden" id="feedback"></div>
+    <div class="actions"><button class="btn hidden" id="next" type="button">Next card</button></div>
+  </main>
+
+  <section id="result" class="result hidden" aria-live="polite">
+    <h2>Done!</h2>
+    <p>You sorted <span class="score" id="finalScore"></span> correctly on the first try.</p>
+    <p class="lede" id="resultNote"></p>
+    <div class="actions"><button class="btn" id="restart" type="button">Try again</button></div>
+  </section>
+
+  <footer>Grounded in the Relay teacher-skills taxonomy · Comprehensible Input (Always skill)</footer>
+</div>
+
+<script id="items" type="application/json">
+[
+  {"answer":"strong","lookfor":"Keep Sentences Short",
+   "text":"\"We will study photosynthesis today. Photosynthesis is how a plant makes its own food. The plant takes in sunlight, water, and carbon dioxide. It uses them to make sugar and oxygen.\"",
+   "why":"Each idea sits in its own brief sentence, so students can process one step at a time."},
+
+  {"answer":"strong","lookfor":"Gestures for Meaning",
+   "text":"[Holds both fists apart, then slowly pushes them together until the knuckles meet.] \"At a convergent boundary, two plates push together — like this.\"",
+   "why":"The hand motion physically illustrates the word “convergent,” supporting meaning for learners still building the vocabulary."},
+
+  {"answer":"strong","lookfor":"Explain Unfamiliar Terms",
+   "text":"\"Volcanoes are often found at divergent plate boundaries, where Earth's plates move away from each other.\"",
+   "why":"The new term “divergent” is defined right away in familiar language."},
+
+  {"answer":"strong","lookfor":"Repeat or Paraphrase Key Information",
+   "text":"\"The density of this liquid is high, meaning a lot of mass is packed into a small space. High density means the matter is packed in tightly. I can tell the density is high because the liquid sinks — the liquid that sinks has more mass in the same amount of space.\"",
+   "why":"The key idea is stated several different ways, so a learner who misses it the first time still catches it."},
+
+  {"answer":"approaching","lookfor":"Explain Unfamiliar Terms",
+   "text":"\"Volcanoes are often found at divergent — meaning moving apart — plate boundaries.\"",
+   "why":"A definition is squeezed in, but it is brief and a little unclear mid-sentence. Setting it apart as its own sentence would make it strong."},
+
+  {"answer":"approaching","lookfor":"Model Language",
+   "text":"\"Try using the sentence frame, 'The independent variable is ___ ,' to tell your partner what we changed in our experiment.\"",
+   "why":"A sentence frame is offered, but the teacher does not model it first with a real example. Demonstrating the frame once would make it strong."},
+
+  {"answer":"approaching","lookfor":"Do Not Use Contractions",
+   "text":"\"We cannot start the lab until everyone is wearing goggles, and don't touch the beakers until I say go.\"",
+   "why":"“Cannot” is expanded, but “don't” slips back in. Expanding every contraction supports learners not yet fluent with them."},
+
+  {"answer":"approaching","lookfor":"Add Emphasis",
+   "text":"[Stresses the capitalized words at the start, then speaks evenly.] \"A chemical change makes a NEW substance. There are two clues that tell you a new substance formed, so listen for the two clues as I think aloud.\"",
+   "why":"Key words are stressed at first but not consistently. Emphasizing “new” and “two clues” throughout would keep attention on what matters most."},
+
+  {"answer":"non","lookfor":"Keep Sentences Short",
+   "text":"\"Today we are going to practice, with several examples, how plants carry out photosynthesis, which is the process occurring in the chloroplasts by which plants convert sunlight, along with the water absorbed through their roots and the carbon dioxide taken in through their leaves, into the glucose they store for energy and the oxygen they release into the air.\"",
+   "why":"One long, densely packed sentence. Breaking it into short sentences would let students process each step."},
+
+  {"answer":"non","lookfor":"Gestures for Meaning",
+   "text":"\"Give me a thumbs up if you understand what a convergent boundary is.\"",
+   "why":"The thumbs up is a check for understanding, not a gesture tied to meaning. A supporting gesture should illustrate the concept itself."},
+
+  {"answer":"non","lookfor":"Do Not Use Idioms or Slang",
+   "text":"\"Balancing a chemical equation is a piece of cake once you get the hang of it.\"",
+   "why":"“Piece of cake” and “get the hang of it” are idioms a multilingual learner may take literally. Use plain, literal language."},
+
+  {"answer":"non","lookfor":"Repeat or Paraphrase Key Information",
+   "text":"\"The density is high here because the liquid sinks.\"",
+   "why":"The key idea is stated once with no restatement, so a learner who misses it has no second chance to catch it."}
+]
+</script>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const all = JSON.parse($("items").textContent);
+
+  // shuffle
+  const items = all.slice();
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+
+  let idx = 0, firstTryCorrect = 0, missedThisCard = false, locked = false;
+
+  // Render text with bracketed [stage directions] styled as cues. Content is trusted/authored.
+  function withCues(s) {
+    return s
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/\[([^\]]+)\]/g, '<span class="cue">[$1]</span>');
+  }
+
+  // ---- sound (Web Audio, self-contained, no assets) ----
+  let actx = null;
+  function ac() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume(); return actx; }
+  function tone(freq, start, dur, type, gain) {
+    const c = ac(), o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t = c.currentTime + start;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function ding() { tone(880, 0, 0.18, "sine", 0.25); tone(1320, 0.08, 0.22, "sine", 0.22); }
+  function buzz() { tone(150, 0, 0.32, "square", 0.18); tone(110, 0, 0.32, "sawtooth", 0.12); }
+
+  function render() {
+    locked = false; missedThisCard = false;
+    const it = items[idx];
+    $("progress").textContent = `Card ${idx + 1} of ${items.length}`;
+    const card = $("card");
+    card.innerHTML = withCues(it.text);
+    card.className = "card";
+    card.style.display = "";
+    $("feedback").className = "feedback hidden";
+    $("next").className = "btn hidden";
+    card.focus();
+  }
+
+  function place(bucket) {
+    if (locked) return;
+    const it = items[idx];
+    const bEl = document.querySelector('.bucket[data-bucket="' + bucket + '"]');
+    const correct = bucket === it.answer;
+
+    if (correct) {
+      locked = true;
+      ding();
+      bEl.classList.add("flash-good");
+      if (!missedThisCard) firstTryCorrect++;
+      const card = $("card");
+      card.classList.add("fly");
+      setTimeout(() => bEl.classList.remove("flash-good"), 350);
+      setTimeout(() => {
+        card.style.display = "none";
+        const fb = $("feedback");
+        fb.className = "feedback";
+        fb.innerHTML = '<span class="lookfor">' + it.lookfor + '</span><br>' +
+          '<span class="verdict">' +
+          (missedThisCard ? "Right — this is " : "Correct — ") +
+          ({strong:"a strong example.",approaching:"an “approaching” example.",non:"a non-example."}[it.answer]) +
+          '</span> ' + it.why;
+        const next = $("next");
+        next.textContent = idx === items.length - 1 ? "See results" : "Next card";
+        next.className = "btn"; next.focus();
+      }, 260);
+    } else {
+      buzz();
+      missedThisCard = true;
+      bEl.classList.add("flash-bad");
+      const card = $("card");
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      setTimeout(() => bEl.classList.remove("flash-bad"), 350);
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= items.length) return finish();
+    render();
+  }
+
+  function finish() {
+    $("game").classList.add("hidden");
+    const res = $("result"); res.classList.remove("hidden");
+    $("finalScore").textContent = firstTryCorrect + " / " + items.length;
+    $("resultNote").textContent = firstTryCorrect === items.length
+      ? "Perfect first-try sorting — you have a sharp eye for what makes input comprehensible."
+      : "Notice how the strong cards define terms, keep sentences short, and pair words with gestures. Try again to sharpen it.";
+    try {
+      window.parent.postMessage({ type:"relay-activity-complete",
+        skillId:"f8444e38-636a-4e95-a1e9-61d081535b19",
+        score:firstTryCorrect, max:items.length }, "*");
+    } catch (e) {}
+  }
+
+  // ---- drag + drop ----
+  const card = $("card");
+  card.addEventListener("dragstart", (e) => {
+    if (locked) { e.preventDefault(); return; }
+    e.dataTransfer.setData("text/plain", "card");
+    e.dataTransfer.effectAllowed = "move";
+    card.classList.add("dragging");
+  });
+  card.addEventListener("dragend", () => card.classList.remove("dragging"));
+
+  document.querySelectorAll(".bucket").forEach((b) => {
+    b.addEventListener("dragover", (e) => { e.preventDefault(); b.classList.add("hover"); });
+    b.addEventListener("dragleave", () => b.classList.remove("hover"));
+    b.addEventListener("drop", (e) => { e.preventDefault(); b.classList.remove("hover"); place(b.dataset.bucket); });
+    // click / keyboard fallback (also covers touch devices)
+    b.addEventListener("click", () => place(b.dataset.bucket));
+  });
+
+  $("next").addEventListener("click", next);
+  $("restart").addEventListener("click", () => {
+    idx = 0; firstTryCorrect = 0;
+    $("result").classList.add("hidden"); $("game").classList.remove("hidden"); render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
