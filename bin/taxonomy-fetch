@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# taxonomy-fetch — read-only access to the Relay teacher-skills taxonomy.
+#
+# Pulls canonical skill + look-for content so activities can be grounded in the
+# real Relay curriculum. AUTHORING-TIME ONLY: bake the returned CONTENT into the
+# activity HTML. Never ship this script or the key inside a published activity.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "$ROOT/.env.local" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT/.env.local"
+  set +a
+fi
+: "${SUPABASE_URL:?Missing SUPABASE_URL — set it in .env.local}"
+: "${SUPABASE_SECRET_KEY:?Missing SUPABASE_SECRET_KEY — paste the secret key into .env.local}"
+
+api() {
+  local table="$1"; shift
+  curl -sS -G "$SUPABASE_URL/rest/v1/$table" \
+    -H "apikey: $SUPABASE_SECRET_KEY" \
+    -H "Authorization: Bearer $SUPABASE_SECRET_KEY" \
+    "$@"
+}
+
+# Full detail for one skill, with every linked look-for expanded (examples included).
+SKILL_DETAIL='id,name,skill_type,alignment,description,purpose_impact,context,acceptable_variations,scoring_prompt,skill_look_fors(look_for_type,type_explanation,look_fors(name,category,teacher_facing_explanation,observable_behaviors,strong_examples,attempting_examples,non_examples,acceptable_variations))'
+
+case "${1:-help}" in
+  skills)
+    api skills \
+      --data-urlencode "select=id,name,skill_type,alignment" \
+      --data-urlencode "order=name"
+    ;;
+  skill)
+    q="${2:?Usage: taxonomy-fetch skill \"<name or id>\"}"
+    if [[ "$q" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+      api skills --data-urlencode "select=$SKILL_DETAIL" --data-urlencode "id=eq.$q"
+    else
+      api skills --data-urlencode "select=$SKILL_DETAIL" --data-urlencode "name=ilike.*$q*"
+    fi
+    ;;
+  lookfor)
+    q="${2:?Usage: taxonomy-fetch lookfor \"<name>\"}"
+    api look_fors \
+      --data-urlencode "select=name,category,teacher_facing_explanation,observable_behaviors,strong_examples,attempting_examples,non_examples,acceptable_variations" \
+      --data-urlencode "name=ilike.*$q*"
+    ;;
+  raw)
+    t="${2:?Usage: taxonomy-fetch raw <table> '<postgrest-query>'}"
+    query="${3:-}"
+    curl -sS "$SUPABASE_URL/rest/v1/$t?$query" \
+      -H "apikey: $SUPABASE_SECRET_KEY" \
+      -H "Authorization: Bearer $SUPABASE_SECRET_KEY"
+    ;;
+  *)
+    cat <<'EOF'
+taxonomy-fetch — read the Relay teacher-skills taxonomy (authoring-time only)
+
+  taxonomy-fetch skills                List every skill (id, name, type)
+  taxonomy-fetch skill "<name|id>"     Full skill detail + all its look-fors (with examples)
+  taxonomy-fetch lookfor "<name>"      Full detail for one look-for
+  taxonomy-fetch raw <table> '<query>' Raw PostgREST query (escape hatch)
+
+Use the CONTENT to ground an activity, then bake it into the HTML.
+Never ship the key or this script inside a published activity.
+EOF
+    ;;
+esac
