@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Relay taxonomy linkage -->
+<meta name="relay-skill-id" content="f8444e38-636a-4e95-a1e9-61d081535b19">
+<meta name="relay-skill-name" content="Comprehensible Input">
+<meta name="relay-lookfor" content="Frame Activity Purpose">
+<title>Frame the Purpose</title>
+<style>
+  :root {
+    --ink:#1b1b1f; --muted:#5c5c66; --line:#e3e3ea; --bg:#e8eefb; --bg-stripe:#d8e2f6; --accent:#2f5fc4;
+    --strong:#137a4b; --strong-bg:#e6f5ec;
+    --attempting:#9a6a00; --attempting-bg:#fbf1dc;
+    --non:#b22633; --non-bg:#fbe8ea;
+    --good:#16a34a; --bad:#dc2626;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink);
+    background:var(--bg);
+    margin:0; line-height:1.5; }
+  .wrap { max-width:50rem; margin:0 auto; padding:1.5rem 1.25rem 4rem; }
+  header { border-bottom:1px solid var(--line); padding-bottom:.9rem; margin-bottom:1.25rem; }
+  .eyebrow { font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0; }
+  h1 { font-size:1.4rem; margin:.25rem 0 .4rem; }
+  .lede { color:var(--muted); margin:0; font-size:.95rem; }
+  .progress { font-size:.85rem; color:var(--muted); margin:.25rem 0 .6rem; }
+  .instructions { background:var(--bg-stripe); border:1px solid #b9c8ec;
+    border-radius:10px; padding:.7rem .9rem; margin:0 0 1.1rem; font-size:.9rem; color:var(--muted); }
+  .instructions .alt { color:var(--muted); }
+  .instructions .cue { font-style:italic; color:var(--muted); }
+
+  .stage { min-height:9.5rem; display:flex; align-items:center; justify-content:center; margin-bottom:1.25rem; }
+  .card { background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:12px; padding:1rem 1.1rem; box-shadow:0 2px 6px rgba(0,0,0,.07);
+    cursor:grab; max-width:42rem; font-size:1rem; }
+  .card:active { cursor:grabbing; }
+  .card:focus-visible { outline:3px solid #a8c0ee; outline-offset:2px; }
+  .card.dragging { opacity:.4; }
+  .card.shake { animation:shake .4s; }
+  .card .cue { font-style:italic; color:var(--muted); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+  .card.fly { transition:transform .25s ease, opacity .25s ease; opacity:0; transform:scale(.85); }
+
+  .buckets { display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; }
+  .bucket { font:inherit; cursor:pointer; border-radius:14px; padding:1.4rem .75rem; min-height:7rem;
+    border:2px dashed var(--line); background:#fff; text-align:center; transition:transform .08s, border-color .12s, background .12s; }
+  .bucket:focus-visible { outline:3px solid #a8c0ee; outline-offset:2px; }
+  .bucket .bname { display:block; font-weight:700; font-size:1.05rem; }
+  .bucket .bhint { display:block; font-size:.78rem; color:var(--muted); margin-top:.25rem; }
+  .bucket[data-bucket=strong] .bname { color:var(--strong); }
+  .bucket[data-bucket=approaching] .bname { color:var(--attempting); }
+  .bucket[data-bucket=non] .bname { color:var(--non); }
+  .bucket.hover { border-style:solid; border-color:var(--accent); transform:translateY(-2px); background:#f3f7fe; }
+  .bucket.flash-good { border-color:var(--good); background:var(--strong-bg); animation:pop .3s; }
+  .bucket.flash-bad { border-color:var(--bad); background:var(--non-bg); animation:pop .3s; }
+  @keyframes pop { 50%{transform:scale(1.04)} }
+
+  .feedback { margin-top:1.1rem; padding:.85rem 1rem; border-radius:10px; background:var(--strong-bg);
+    color:var(--strong); font-size:.95rem; }
+  .feedback .verdict { font-weight:700; }
+  .feedback .lookfor { display:inline-block; font-size:.78rem; font-weight:700; letter-spacing:.02em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:.2rem; }
+  .actions { margin-top:1.1rem; display:flex; justify-content:flex-end; }
+  .btn { font:inherit; font-weight:600; padding:.6rem 1.1rem; border-radius:10px; border:0;
+    background:var(--accent); color:#fff; cursor:pointer; }
+  .btn:focus-visible { outline:3px solid #a8c0ee; outline-offset:2px; }
+  .hidden { display:none; }
+  .result { background:#fff; border:1px solid var(--line); border-radius:14px; padding:1.5rem; }
+  .result h2 { margin-top:0; }
+  .score { font-size:2.4rem; font-weight:800; color:var(--accent); }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+  footer { margin-top:2rem; font-size:.8rem; color:var(--muted); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Relay Teacher Skills · Look-For: Frame Activity Purpose</p>
+    <h1>Frame the Purpose</h1>
+    <p class="lede">Frame Activity Purpose: preview what will happen and state a clear focus for student thinking and engagement.</p>
+  </header>
+
+  <main id="game">
+    <p class="progress" id="progress"></p>
+    <p class="instructions">👉 Each card is something an <strong>8th-grade science teacher</strong> says <em>just before</em> an activity — a think-aloud, a demonstration, or highlighting a student's work. <span class="cue">[Stage directions in brackets]</span> describe gestures, visuals, or pacing. A strong frame does three things: it <strong>previews</strong> what will happen, <strong>states a clear purpose</strong> or focus, and <strong>gives students a specific task</strong> (listen for, record, analyze…). <strong>Drag the card</strong> into the bucket that fits how well it frames the activity's purpose — <strong>Strong</strong>, <strong>Approaching</strong>, or <strong>Non-example</strong>. A correct drop chimes and turns green; a wrong drop buzzes and the card comes back to try again. <span class="alt">(On a touch screen or with a keyboard, just tap a bucket.)</span></p>
+
+    <div class="stage" id="stage">
+      <div class="card" id="card" draggable="true" tabindex="0" role="article"></div>
+    </div>
+
+    <div class="buckets" id="buckets">
+      <button class="bucket" data-bucket="strong" type="button">
+        <span class="bname">Strong</span><span class="bhint">Previews, states purpose, gives a task</span></button>
+      <button class="bucket" data-bucket="approaching" type="button">
+        <span class="bname">Approaching</span><span class="bhint">Names the topic, but purpose or task is missing</span></button>
+      <button class="bucket" data-bucket="non" type="button">
+        <span class="bname">Non-example</span><span class="bhint">No real framing, or purpose is compliance/grades</span></button>
+    </div>
+
+    <div class="feedback hidden" id="feedback"></div>
+    <div class="actions"><button class="btn hidden" id="next" type="button">Next card</button></div>
+  </main>
+
+  <section id="result" class="result hidden" aria-live="polite">
+    <h2>Done!</h2>
+    <p>You sorted <span class="score" id="finalScore"></span> correctly on the first try.</p>
+    <p class="lede" id="resultNote"></p>
+    <div class="actions"><button class="btn" id="restart" type="button">Try again</button></div>
+  </section>
+
+  <footer>Grounded in the Relay teacher-skills taxonomy · Look-for: Frame Activity Purpose</footer>
+</div>
+
+<script id="items" type="application/json">
+[
+  {"answer":"strong","tag":"Previews · States purpose · Gives a task",
+   "text":"\"When we read scientific data tables, our understanding sometimes breaks down because there are so many numbers to keep track of. I'm going to think aloud to show you the steps I use to make sense of a data table so I don't get lost. As I think aloud, record each step I take in your notes. Before I start — remind me, what are you doing while I think aloud?\"",
+   "why":"It previews the think-aloud, names a clear purpose (how to make sense of a data table), gives students a specific task (record each step), and even checks their understanding of the framing first."},
+
+  {"answer":"strong","tag":"States a clear focus for thinking",
+   "text":"\"I want to highlight Maria's explanation of why the balloon shrank in the freezer. As I read it, think about what makes her use of evidence strong.\" [Reads the response aloud.]",
+   "why":"It previews what's coming and gives students a precise lens — what makes the evidence strong — so they know exactly what to think about as they listen."},
+
+  {"answer":"strong","tag":"Previews · States purpose · Gives a task",
+   "text":"[Projects a four-column chart.] \"I'm going to show you each sign of a chemical reaction with an example. As I do, record the sign and its example in your notes. You'll use your notes later to identify examples and non-examples of chemical reactions.\"",
+   "why":"Students know what will happen, why it matters, what to do during (record sign + example), and how they'll use it afterward."},
+
+  {"answer":"strong","tag":"Gives students a specific role",
+   "text":"[Holds up a graduated cylinder and a balance.] \"In a moment I'll demonstrate how to measure the mass of a liquid. Watch the order of the three steps I follow, because right after, you'll do the same measurement with your group. What are you watching for as I demonstrate?\"",
+   "why":"It previews the demo, sets a clear focus (the order of the three steps), assigns a role for what comes next, and confirms the framing landed."},
+
+  {"answer":"approaching","tag":"Purpose unclear, no student task",
+   "text":"\"I'm going to show you two ways to balance this equation, just to put them both out there — whichever one you like. So let's start with the inspection method.\"",
+   "why":"Approaching: the teacher previews the activity but gives no clear purpose and no task for students. Naming why one method matters and what to listen for would make it strong."},
+
+  {"answer":"approaching","tag":"States topic, not purpose or goal",
+   "text":"\"This think-aloud is going to be about converting grams to moles.\"",
+   "why":"Approaching: it names the topic but stops there — no purpose for the thinking and no task for students. Adding what to listen for would lift it."},
+
+  {"answer":"approaching","tag":"Missing why",
+   "text":"\"Pause what you're doing and look up here for a second. I want to highlight a student's answer.\"",
+   "why":"Approaching: it previews and even directs attention, but never says why this answer is worth highlighting or what to think about. The 'why' is the missing piece."},
+
+  {"answer":"approaching","tag":"Logistics, not a thinking focus",
+   "text":"\"Today we're doing a lab on density. Goggles on, grab a station, and get your lab sheet out.\"",
+   "why":"Approaching: students know the topic and the logistics, but there's no learning focus and no specific thinking task. What should they be figuring out or noticing during the lab?"},
+
+  {"answer":"non","tag":"No framing",
+   "text":"\"Okay, watch me think aloud.\"",
+   "why":"Non-example: no preview of purpose, no focus, no task. Students have no idea what to attend to or why."},
+
+  {"answer":"non","tag":"'Pay attention' is too vague",
+   "text":"\"I'm going to show you how to do this. Pay attention.\"",
+   "why":"Non-example: 'pay attention' gives students nothing specific to think about or do. A real frame names a focus or task."},
+
+  {"answer":"non","tag":"Purpose stated as compliance",
+   "text":"\"Get this lab sheet finished so you can earn your participation points for today.\"",
+   "why":"Non-example: the purpose is compliance — points for the day — not learning. It gives students no intellectual focus."},
+
+  {"answer":"non","tag":"Purpose stated as test performance",
+   "text":"\"Pay close attention to this next part — it's going to be on the unit test.\"",
+   "why":"Non-example: framing the purpose only as test performance doesn't tell students what to think about or why the science matters."}
+]
+</script>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const all = JSON.parse($("items").textContent);
+
+  // shuffle
+  const items = all.slice();
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+
+  let idx = 0, firstTryCorrect = 0, missedThisCard = false, locked = false;
+
+  // Render text with bracketed [stage directions] styled as cues. Content is trusted/authored.
+  function withCues(s) {
+    return s
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/\[([^\]]+)\]/g, '<span class="cue">[$1]</span>');
+  }
+
+  // ---- sound (Web Audio, self-contained, no assets) ----
+  let actx = null;
+  function ac() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume(); return actx; }
+  function tone(freq, start, dur, type, gain) {
+    const c = ac(), o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t = c.currentTime + start;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function ding() { tone(880, 0, 0.18, "sine", 0.25); tone(1320, 0.08, 0.22, "sine", 0.22); }
+  function buzz() { tone(150, 0, 0.32, "square", 0.18); tone(110, 0, 0.32, "sawtooth", 0.12); }
+
+  function render() {
+    locked = false; missedThisCard = false;
+    const it = items[idx];
+    $("progress").textContent = `Card ${idx + 1} of ${items.length}`;
+    const card = $("card");
+    card.innerHTML = withCues(it.text);
+    card.className = "card";
+    card.style.display = "";
+    $("feedback").className = "feedback hidden";
+    $("next").className = "btn hidden";
+    card.focus();
+  }
+
+  function place(bucket) {
+    if (locked) return;
+    const it = items[idx];
+    const bEl = document.querySelector('.bucket[data-bucket="' + bucket + '"]');
+    const correct = bucket === it.answer;
+
+    if (correct) {
+      locked = true;
+      ding();
+      bEl.classList.add("flash-good");
+      if (!missedThisCard) firstTryCorrect++;
+      const card = $("card");
+      card.classList.add("fly");
+      setTimeout(() => bEl.classList.remove("flash-good"), 350);
+      setTimeout(() => {
+        card.style.display = "none";
+        const fb = $("feedback");
+        fb.className = "feedback";
+        fb.innerHTML = '<span class="lookfor">' + it.tag + '</span><br>' +
+          '<span class="verdict">' +
+          (missedThisCard ? "Right — this is " : "Correct — ") +
+          ({strong:"a strong example.",approaching:"an “approaching” example.",non:"a non-example."}[it.answer]) +
+          '</span> ' + it.why;
+        const next = $("next");
+        next.textContent = idx === items.length - 1 ? "See results" : "Next card";
+        next.className = "btn"; next.focus();
+      }, 260);
+    } else {
+      buzz();
+      missedThisCard = true;
+      bEl.classList.add("flash-bad");
+      const card = $("card");
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      setTimeout(() => bEl.classList.remove("flash-bad"), 350);
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= items.length) return finish();
+    render();
+  }
+
+  function finish() {
+    $("game").classList.add("hidden");
+    const res = $("result"); res.classList.remove("hidden");
+    $("finalScore").textContent = firstTryCorrect + " / " + items.length;
+    $("resultNote").textContent = firstTryCorrect === items.length
+      ? "Perfect first-try sorting — you can spot a frame that previews, states a purpose, and gives students a task."
+      : "Notice how the strong frames preview what's coming, name a clear purpose, and give students something specific to do. Try again to sharpen it.";
+    try {
+      window.parent.postMessage({ type:"relay-activity-complete",
+        skillId:"f8444e38-636a-4e95-a1e9-61d081535b19",
+        lookfor:"Frame Activity Purpose",
+        score:firstTryCorrect, max:items.length }, "*");
+    } catch (e) {}
+  }
+
+  // ---- drag + drop ----
+  const card = $("card");
+  card.addEventListener("dragstart", (e) => {
+    if (locked) { e.preventDefault(); return; }
+    e.dataTransfer.setData("text/plain", "card");
+    e.dataTransfer.effectAllowed = "move";
+    card.classList.add("dragging");
+  });
+  card.addEventListener("dragend", () => card.classList.remove("dragging"));
+
+  document.querySelectorAll(".bucket").forEach((b) => {
+    b.addEventListener("dragover", (e) => { e.preventDefault(); b.classList.add("hover"); });
+    b.addEventListener("dragleave", () => b.classList.remove("hover"));
+    b.addEventListener("drop", (e) => { e.preventDefault(); b.classList.remove("hover"); place(b.dataset.bucket); });
+    // click / keyboard fallback (also covers touch devices)
+    b.addEventListener("click", () => place(b.dataset.bucket));
+  });
+
+  $("next").addEventListener("click", next);
+  $("restart").addEventListener("click", () => {
+    idx = 0; firstTryCorrect = 0;
+    $("result").classList.add("hidden"); $("game").classList.remove("hidden"); render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
